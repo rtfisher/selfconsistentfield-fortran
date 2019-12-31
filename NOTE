@@ -1,0 +1,7 @@
+example
+=======
+relax = 1.0, 0.5, 0.25 for rhoc/rhoext = 14, beta = 0.25
+
+greater central densities do not seem to converge in the rotating
+case, but do seem to work *maybe* for nonrotating, even with simple
+initial guess 

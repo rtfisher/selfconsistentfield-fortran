@@ -1,0 +1,7 @@
+Improve gridding scheme for sweeps through the grid by
+using size of last equilibrium model to initialize the problem
+domain size on successive sweeps.
+
+Improve order of accuracy of the stencil used in the SOR routine.
+
+
