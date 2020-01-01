@@ -23,6 +23,11 @@ C// symmetry is assumed, so only the top half plane (z > 0) is modeled.
 C// The successive overrelaxation parameter omega (0 < omega < 2) has been
 C// hand-tuned to optimal values on specific mesh sizes.
 C//  
+C// The code operates in a dimensionless fashion, with mass in units
+C// of M* = ciso^4 / [G^(3/2) Pext^(1/2)], length L* = ciso^2 Pext^(1/2) /
+C// G^(1/2) and time t* = ciso Pext^(1/2) / G^(1/2). See Stahler, 1983
+C// eqn. 1 and subs. for more detail.
+C//
 C// For papers describing the self-consistent field method employed here,
 C// see Stahler, 1983 (doi:10.1086/160941) and
 C// Ostriker & Mark, 1968 (doi:10.1086/149506).
