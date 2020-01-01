@@ -23,10 +23,11 @@ C// symmetry is assumed, so only the top half plane (z > 0) is modeled.
 C// The successive overrelaxation parameter omega (0 < omega < 2) has been
 C// hand-tuned to optimal values on specific mesh sizes.
 C//  
-C// The code operates in a dimensionless fashion, with mass in units
-C// of M* = ciso^4 / [G^(3/2) Pext^(1/2)], length L* = ciso^2 Pext^(1/2) /
-C// G^(1/2) and time t* = ciso Pext^(1/2) / G^(1/2). See Stahler, 1983
-C// eqn. 1 and subs. for more detail.
+C// The code operates in a dimensionless fashion, according to Bonnor-Ebert
+c// scales, with mass in units of M* = ciso^4 / [G^(3/2) Pext^(1/2)],
+C// length R* = ciso^2/[ Pext^(1/2) G^(1/2)], and time t* =
+c// ciso Pext^(1/2) / G^(1/2). See Stahler, 1983 eqn. 1 and subs. for 
+C// more detail.
 C//
 C// For papers describing the self-consistent field method employed here,
 C// see Stahler, 1983 (doi:10.1086/160941) and
@@ -40,7 +41,7 @@ C///////////////////////////////////////////////////////////////////////
      &          oldrho (NR, NZ), maxerr, dr, dz, r
      &          , vphi (0 : NR + 1)
         REAL_T Jang, M, beta0, rhoc, rhoext, ciso, beta, specmom
-        REAL_T jstar, mstar, rstar, radiuseq, height, volume
+        REAL_T jstar, mstar, rstar, radiuseq, height
         REAL_T getrotener, getbindener, getthermener, minrho, maxrho
         REAL_T getvolume, virial, T, U, V, W, pext
 
@@ -149,6 +150,11 @@ C...Keep rhoext / rhoc fixed here, but vary beta0.
             beta0 = .12  
           end if       
 #endif
+
+c... Recompute the angular momentum for this pass. The value of
+c... Jang represents the angular momentum of a rigidly-rotating sphere
+c... with rotational energy / binding energy ratio beta0
+
           Jang = sqrt (12. / 25.) *
      &         (3. / (4. * pi ) )**(1. / 6.) *
      &         G**(1. / 2.) *
@@ -172,6 +178,8 @@ c        dz = ZDOMAIN * rstar / float (NZ - 1)
      &       Jang**2.0 / (G *
      &       M**(10.0 / 3.0) )
 
+c... define dimensionless units mstar, rstar, jstar (see above)
+
         mstar = ciso**3.0 / (sqrt (rhoext * G**3.0) )
         rstar = ciso / (sqrt (G * rhoext) )
         jstar = ciso**6.0 / (rhoext * G**2.0)
@@ -179,21 +187,23 @@ c        dz = ZDOMAIN * rstar / float (NZ - 1)
 
         totalmass = 0.0
 
-        do i = 1, NR
+        call getcloudmass (rho, totalmass)
 
-          r = i * dr
+!        do i = 1, NR
 
-          do j = 1, NZ
-             if (rho (i, j) .gt. rhoext) then
+!          r = i * dr
+
+!          do j = 1, NZ
+!             if (rho (i, j) .gt. rhoext) then
 
 C...Additional factor of 2 for mass below the plane.
 
-               totalmass = totalmass + 4.0 * pi *
-     &                     r * dr * dz *
-     &                     rho (i, j)
-             end if
-          end do
-        end do
+!               totalmass = totalmass + 4.0 * pi *
+!     &                     r * dr * dz *
+!     &                     rho (i, j)
+!             end if
+!          end do
+!        end do
 
 
         do i = 0, NR + 1
@@ -299,24 +309,25 @@ C...Compute virial error as a check on solution.
 C...Compute and display properties of the solution.
 
  100    totalmass = 0.0
-        volume = 0.0
 
         maxrho = 0.0
         minrho = 1.0 / smallnum
 
+        call getcloudmass (rho, totalmass)
+
         do i = 1, NR
-          r = i * dr
+!          r = i * dr
           do j = 1, NZ
 
 C...Additional factor of 2 for mass below the plane.
 
-             if (rho (i, j) .gt. rhoext) then
-               totalmass = totalmass + 4.0 * pi *
-     &                     r * dr * dz *
-     &                     rho (i, j)
-               volume = volume + 4.0 * pi * 
-     &                     r * dr * dz 
-             end if
+!             if (rho (i, j) .gt. rhoext) then
+!               totalmass = totalmass + 4.0 * pi *
+!     &                     r * dr * dz *
+!     &                     rho (i, j)
+!               volume = volume + 4.0 * pi * 
+!     &                     r * dr * dz 
+!             end if
 
              maxrho = max (maxrho, rho (i, j) )
              minrho = min (minrho, rho (i, j) )
@@ -353,7 +364,7 @@ C...Additional factor of 2 for mass below the plane.
         write (3, 106) U / W
         write (3, 107) T / W
         write (3, 108) 3.0 * pext * V / (2.0 * W)
-        write (3, 115) totalmass / volume / (rhoext)
+        write (3, 115) totalmass / V / (rhoext)
         write (3, *) '--------------------------------------'
         write (3, 110) rstar
         write (3, 111) mstar
@@ -398,7 +409,7 @@ c 109    format (1x)
         print *
         print *, 'cloud mass = ', totalmass
         print * 
-        print *, 'rhobar / rhoext = ', (totalmass / volume)  /
+        print *, 'rhobar / rhoext = ', (totalmass / V)  /
      &     rhoext
 #endif
 
